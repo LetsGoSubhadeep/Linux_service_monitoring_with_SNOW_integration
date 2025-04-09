@@ -9,15 +9,15 @@ from creds import *
 import traceback
 import subprocess
 
-###################################################
-# Doing the basic logging configuration and format#
-###################################################
+####################################################
+# Doing the basic logging configuration and format #
+####################################################
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-############
-# Variables#
-############
+#############
+# Variables #
+#############
 
 ServerName = subprocess.check_output(["hostname"], shell=True,text=True)
 headers = {
@@ -29,10 +29,10 @@ number = "1"
 list_of_inc = []
 list_of_sys_ids = []
 get_sys_id = []
-
-#################################
-#Defining the required functions#
-#################################
+service_name = "chronyd"
+###################################
+# Defining the required functions #
+###################################
 
 def create_inc_snow():
     global get_sys_id
@@ -46,7 +46,7 @@ def create_inc_snow():
 
 def resolve_exist_inc():
     resolve_inc_url = f"https://{snow_instance}.service-now.com/api/now/table/incident/{get_sys_id}"
-    service_status = get_systemctl_service_status_output("chronyd")
+    service_status = get_systemctl_service_status_output(service_name)
     line_separator = "\n ******************************************** \n"
     payload = {"incident_state":"7","close_code":"Resolved by caller","close_notes":"The issue has resolved","work_notes":"The service has started running again on server: "+ServerName+  " "+line_separator +service_status}
     send_resolve_reqs = requests.patch(resolve_inc_url, auth=(snow_userID,snow_passwd ), headers=headers, data=json.dumps(payload,indent=4))
@@ -66,10 +66,6 @@ def get_inc_details():
     return finding, list_of_sys_ids
 
 
-def convertOutput_list_to_str(output):
-    str_read = ''
-    return (str_read.join(output))
-
 def format_exc_for_journald(ex, indent_lines=False):
     """
         Journald removes leading whitespace from every line, making it very
@@ -86,6 +82,7 @@ def format_exc_for_journald(ex, indent_lines=False):
             result += "." + line + "\n"
     return result.rstrip()
 
+
 def check_service_status(service_name):
     try:
         result = subprocess.run(
@@ -99,6 +96,7 @@ def check_service_status(service_name):
     except subprocess.CalledProcessError as e:
         return e.stdout.strip() or e.stderror.strip()
 
+
 def get_systemctl_service_status_output(service_name):
     result = subprocess.run(
             ["systemctl", "status", service_name], 
@@ -107,15 +105,15 @@ def get_systemctl_service_status_output(service_name):
             )
     return result.stdout
 
-################
-# The main Code#
-################
+#################
+# The main Code #
+#################
 
 try:
 
     while True:                                                                                                     # Created infinite loop to continuously getting the data from the server
 
-        service_status = check_service_status("chronyd")
+        service_status = check_service_status(service_name)
         if service_status == "active":
             logging.info("service is running...")
             finding, list_of_sys_ids = get_inc_details()
