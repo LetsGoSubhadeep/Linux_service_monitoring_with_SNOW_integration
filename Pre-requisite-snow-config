@@ -1,0 +1,7 @@
+##Initial Steps##
+1. Create an user in snow
+2. Set the password
+3. Uncheck "password needs reset"
+4. Assign these 2 roles so that you can get data through API call
+	i. itil
+	ii. rest_service
